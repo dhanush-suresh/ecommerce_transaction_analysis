@@ -1,4 +1,4 @@
-version: '3'  # You can keep this or remove it based on the warning
+version: '3' 
 
 services:
   zookeeper:
@@ -13,8 +13,8 @@ services:
     image: wurstmeister/kafka
     container_name: kafka
     ports:
-      - "9092:9092"   # Inside Docker
-      - "9093:9093"   # External access
+      - "9092:9092"   
+      - "9093:9093"  
     environment:
       KAFKA_ADVERTISED_LISTENERS: INSIDE://kafka:9092,OUTSIDE://localhost:9093
       KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: INSIDE:PLAINTEXT,OUTSIDE:PLAINTEXT
@@ -22,6 +22,38 @@ services:
       KAFKA_INTER_BROKER_LISTENER_NAME: INSIDE
       KAFKA_ZOOKEEPER_CONNECT: zookeeper:2181
       KAFKA_CREATE_TOPICS: "transactions:1:1"
+    networks:
+      - kafka-net
+
+  cassandra:
+    image: cassandra:latest
+    container_name: cassandra
+    ports:
+      - "9042:9042"
+    environment:
+      CASSANDRA_CLUSTER_NAME: "cassandra"
+      CASSANDRA_RPC_ADDRESS: 0.0.0.0
+    networks:
+      - kafka-net
+    healthcheck:
+      test: ["CMD", "cqlsh", "-e", "describe keyspaces"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+  
+  stream_processor:
+    build: ../stream_processing 
+    depends_on:
+      - kafka
+      - cassandra
+    networks:
+      - kafka-net
+  
+  producer:
+    build: ../data_producer
+    depends_on:
+      - kafka
+      - cassandra
     networks:
       - kafka-net
 

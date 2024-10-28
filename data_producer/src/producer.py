@@ -2,19 +2,16 @@ from kafka import KafkaProducer
 import json
 import time
 import random
+import logging
 
-KAFKA_BROKER = 'kafka:9092'
-TOPIC = "transactions"
-producer = KafkaProducer(
-    bootstrap_servers = KAFKA_BROKER,
-    value_serializer = lambda v:json.dumps(v).encode('utf-8'),
-    acks = 'all'
-)
+logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
+logger = logging.getLogger(__name__)
+
 def on_send_error(excp):
-    print(f"Error sending message: {excp}")
+    logger.error(f"Error sending message: {excp}")
 
 def on_send_success(record_metadata):
-    print(f"Message sent successfully. Topic: {record_metadata.topic}, Partition: {record_metadata.partition}, Offset: {record_metadata.offset}")
+    logger.info(f"Message sent successfully. Topic: {record_metadata.topic}, Partition: {record_metadata.partition}, Offset: {record_metadata.offset}")
     
 def generate_transactions():
     while True:
@@ -33,6 +30,14 @@ def generate_transactions():
         time.sleep(2)
     
 if __name__ == "__main__":
+    time.sleep(90)
+    KAFKA_BROKER = 'kafka:9092'
+    TOPIC = "transactions"
+    producer = KafkaProducer(
+    bootstrap_servers = KAFKA_BROKER,
+    value_serializer = lambda v:json.dumps(v).encode('utf-8'),
+    acks = 'all'
+    )
     generate_transactions()
     
     
