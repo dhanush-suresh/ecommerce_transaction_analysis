@@ -3,23 +3,36 @@ import json
 import time
 import random
 
+KAFKA_BROKER = 'kafka:9092'
+TOPIC = "transactions"
 producer = KafkaProducer(
-    bootstrap_servers = 'localhost:9092',
-    value_serializer = lambda v:json.dumps(v).encode('utf-8')
+    bootstrap_servers = KAFKA_BROKER,
+    value_serializer = lambda v:json.dumps(v).encode('utf-8'),
+    acks = 'all'
 )
+def on_send_error(excp):
+    print(f"Error sending message: {excp}")
 
+def on_send_success(record_metadata):
+    print(f"Message sent successfully. Topic: {record_metadata.topic}, Partition: {record_metadata.partition}, Offset: {record_metadata.offset}")
+    
 def generate_transactions():
-    return{
+    while True:
+        transaction = {
         'order_id' : str(random.randint(1000,99999)),
         'user_id' : 'user_' + str(random.randint(1,9999)),
         'product_id' : 'product_' + str(random.randint(1,50)),
         'quantity' : random.randint(1,5),
         'price': round(random.uniform(10,100.0),2),
         'timestamp': time.strftime('%Y-%m-%d %H:%M:%S')
-    }
+        }
+        future = producer.send(TOPIC, transaction)
+        future.add_callback(on_send_success)
+        future.add_errback(on_send_error)
+
+        time.sleep(2)
     
-while True:
-    transaction = generate_transactions()
-    producer.send('transactions',transaction)
-    print(f"Sent: {transaction}")
-    time.sleep(1)
+if __name__ == "__main__":
+    generate_transactions()
+    
+    
