@@ -25,37 +25,38 @@ services:
     networks:
       - kafka-net
 
-  cassandra:
-    image: cassandra:latest
-    container_name: cassandra
-    ports:
-      - "9042:9042"
-    environment:
-      CASSANDRA_CLUSTER_NAME: "cassandra"
-      CASSANDRA_RPC_ADDRESS: 0.0.0.0
-    networks:
-      - kafka-net
-    healthcheck:
-      test: ["CMD", "cqlsh", "-e", "describe keyspaces"]
-      interval: 30s
-      timeout: 10s
-      retries: 5
+  # cassandra:
+  #   image: cassandra:latest
+  #   container_name: cassandra
+  #   ports:
+  #     - "9042:9042"
+  #   environment:
+  #     CASSANDRA_CLUSTER_NAME: "cassandra"
+  #     CASSANDRA_RPC_ADDRESS: 0.0.0.0
   
-  stream_processor:
-    build: ../stream_processing 
-    depends_on:
-      - kafka
-      - cassandra
-    networks:
-      - kafka-net
+  #   networks:
+  #     - kafka-net
+  #   healthcheck:
+  #     test: ["CMD", "cqlsh", "-e", "describe keyspaces"]
+  #     interval: 30s
+  #     timeout: 10s
+  #     retries: 5
   
-  producer:
-    build: ../data_producer
-    depends_on:
-      - kafka
-      - cassandra
-    networks:
-      - kafka-net
+  # stream_processor:
+  #   build: ../stream_processing 
+  #   depends_on:
+  #     - kafka
+  #     - cassandra
+  #   networks:
+  #     - kafka-net
+  
+  # producer:
+  #   build: ../data_producer
+  #   depends_on:
+  #     - kafka
+  #     - cassandra
+  #   networks:
+  #     - kafka-net
 
 networks:
   kafka-net:
